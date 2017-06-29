@@ -2553,6 +2553,9 @@ static inline void tcp_end_cwnd_reduction(struct sock *sk)
 {
 	struct tcp_sock *tp = tcp_sk(sk);
 
+    /*
+     * ###+++--net 2.0 bbr has cong_control just return----+++###
+     */
 	if (inet_csk(sk)->icsk_ca_ops->cong_control)
 		return;
 
@@ -3339,6 +3342,10 @@ static void tcp_cong_control(struct sock *sk, u32 ack, u32 acked_sacked,
 {
 	const struct inet_connection_sock *icsk = inet_csk(sk);
 
+    /*
+     * ###+++---net 1.9 bbr has cong_control---+++###
+     */
+
 	if (icsk->icsk_ca_ops->cong_control) {
 		icsk->icsk_ca_ops->cong_control(sk, rs);
 		return;
@@ -3554,6 +3561,9 @@ static inline void tcp_in_ack_event(struct sock *sk, u32 flags)
 	const struct inet_connection_sock *icsk = inet_csk(sk);
 
 	if (icsk->icsk_ca_ops->in_ack_event)
+        /* ###+++---net 1.7 ---+++###
+         * This is the enter of congestion control when packet recv
+         */
 		icsk->icsk_ca_ops->in_ack_event(sk, flags);
 }
 
@@ -3581,6 +3591,10 @@ static void tcp_xmit_recovery(struct sock *sk, int rexmit)
 /* This routine deals with incoming acks, but not outgoing ones. */
 static int tcp_ack(struct sock *sk, const struct sk_buff *skb, int flag)
 {
+    /*
+     * ###+++---net 1.5---+++###
+     */
+
 	struct inet_connection_sock *icsk = inet_csk(sk);
 	struct tcp_sock *tp = tcp_sk(sk);
 	struct tcp_sacktag_state sack_state;
@@ -3650,6 +3664,8 @@ static int tcp_ack(struct sock *sk, const struct sk_buff *skb, int flag)
 		tcp_snd_una_update(tp, ack);
 		flag |= FLAG_WIN_UPDATE;
 
+        /* ###+++---net 1.6---+++###
+         */
 		tcp_in_ack_event(sk, CA_ACK_WIN_UPDATE);
 
 		NET_INC_STATS(sock_net(sk), LINUX_MIB_TCPHPACKS);
@@ -3709,6 +3725,9 @@ static int tcp_ack(struct sock *sk, const struct sk_buff *skb, int flag)
 	delivered = tp->delivered - delivered;	/* freshly ACKed or SACKed */
 	lost = tp->lost - lost;			/* freshly marked lost */
 	tcp_rate_gen(sk, delivered, lost, &now, &rs);
+
+    /* ###+++---net used code when ack arive ---+++###
+     */
 	tcp_cong_control(sk, ack, delivered, flag, &rs);
 	tcp_xmit_recovery(sk, rexmit);
 	return 1;
@@ -5372,6 +5391,10 @@ discard:
 void tcp_rcv_established(struct sock *sk, struct sk_buff *skb,
 			 const struct tcphdr *th, unsigned int len)
 {
+    /* ###+++---net 1.4 ----+++###
+     * when we want to check congestion control, it should at ESTABLISH state
+     */
+
 	struct tcp_sock *tp = tcp_sk(sk);
 
 	if (unlikely(!sk->sk_rx_dst))
@@ -6011,6 +6034,9 @@ int tcp_rcv_state_process(struct sock *sk, struct sk_buff *skb)
 		} else
 			tcp_init_metrics(sk);
 
+        /*
+         * ###+++---net 1.8 bbr has cong_control unused code---+++###
+         */
 		if (!inet_csk(sk)->icsk_ca_ops->cong_control)
 			tcp_update_pacing_rate(sk);
 

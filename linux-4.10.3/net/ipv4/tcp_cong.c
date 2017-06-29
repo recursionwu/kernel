@@ -69,6 +69,9 @@ int tcp_register_congestion_control(struct tcp_congestion_ops *ca)
 	int ret = 0;
 
 	/* all algorithms must implement these */
+
+    /* ###+++---net 2.1 used to register---+++###
+     */
 	if (!ca->ssthresh || !ca->undo_cwnd ||
 	    !(ca->cong_avoid || ca->cong_control)) {
 		pr_err("%s does not implement required ops\n", ca->name);

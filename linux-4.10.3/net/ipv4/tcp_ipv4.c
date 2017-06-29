@@ -1387,6 +1387,8 @@ int tcp_v4_do_rcv(struct sock *sk, struct sk_buff *skb)
 {
 	struct sock *rsk;
 
+    /* ###+++---net 1.3 ---+++###
+     */
 	if (sk->sk_state == TCP_ESTABLISHED) { /* Fast path */
 		struct dst_entry *dst = sk->sk_rx_dst;
 
@@ -1638,6 +1640,10 @@ int tcp_v4_rcv(struct sk_buff *skb)
 	TCP_SKB_CB(skb)->sacked	 = 0;
 
 lookup:
+    /* ###+++---net 1.2 ---+++###
+     * find socket according to tcp hdr src&dst port
+     *
+     */
 	sk = __inet_lookup_skb(&tcp_hashinfo, skb, __tcp_hdrlen(th), th->source,
 			       th->dest, &refcounted);
 	if (!sk)

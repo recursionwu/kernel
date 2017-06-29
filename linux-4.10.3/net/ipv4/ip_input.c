@@ -191,6 +191,11 @@ bool ip_call_ra_chain(struct sk_buff *skb)
 
 static int ip_local_deliver_finish(struct net *net, struct sock *sk, struct sk_buff *skb)
 {
+    /* ###+++---net 1.1 ---+++###
+     * After NF_INET_LOCAL_IN, it will enter here
+     *
+     */
+
 	__skb_pull(skb, skb_network_header_len(skb));
 
 	rcu_read_lock();
@@ -202,6 +207,12 @@ static int ip_local_deliver_finish(struct net *net, struct sock *sk, struct sk_b
 	resubmit:
 		raw = raw_local_deliver(skb, protocol);
 
+        /* ###+++---net 1.1.1 ---+++###
+         * find struct net_protocol according to ip hdr protocol,
+         * protocl registered at af_inet.c
+         * (inet_init-> inet_add_protocol(&tcp_protocol, IPPROTO_TCP))
+         * if it is a tcp packet, it will enter tcp_v4_rcv
+         */
 		ipprot = rcu_dereference(inet_protos[protocol]);
 		if (ipprot) {
 			int ret;
@@ -244,6 +255,12 @@ static int ip_local_deliver_finish(struct net *net, struct sock *sk, struct sk_b
  */
 int ip_local_deliver(struct sk_buff *skb)
 {
+    /* ###+++---net 1.0 ---+++###
+     * When packet is judged as packet send to local at ip_input.c
+     * (ip_rcv_finish->ip_route_input->ip_route_input_slow->rth->u.dst.input=ip_local_deliver)
+     * it will enter here.
+     */
+
 	/*
 	 *	Reassemble IP fragments.
 	 */
